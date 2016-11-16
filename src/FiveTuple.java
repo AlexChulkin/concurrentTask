@@ -1,7 +1,11 @@
 /*
+ * Copyright Alex Chulkin (c) 2016
+ */
+
+/*
  * The helper FiveTuple class
  */
-public class FiveTuple<A, B, C, D, E> extends Pair<A,B> {
+class FiveTuple<A, B, C, D, E> extends Pair<A, B> {
 
 	private C third;
 	private D fourth;
@@ -14,27 +18,28 @@ public class FiveTuple<A, B, C, D, E> extends Pair<A,B> {
 		this.fifth = fifth;
 	}
 
+	C getThird() {
+		return third;
+	}
+
 	public void setThird(C third) {
 		this.third = third;
+	}
+
+	D getFourth() {
+		return fourth;
 	}
 
 	public void setFourth(D fourth) {
 		this.fourth = fourth;
 	}
 
-	public void setFifth(E fifth){
-		this.fifth = fifth;
-	}
-	public C getThird() {
-		return third;
-	}
-	
-	public D getFourth() {
-		return fourth;
-	}
-	
-	public E getFifth(){
+	E getFifth() {
 		return fifth;
+	}
+
+	public void setFifth(E fifth) {
+		this.fifth = fifth;
 	}
 
 }

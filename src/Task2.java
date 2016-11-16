@@ -1,12 +1,17 @@
+
+/*
+ * Copyright Alex Chulkin (c) 2016
+ */
+
 /**
  * Second task.
  * Uses two threads: one for the search, another for the printing of the results
  * @author Alex Chulkin
  * 
  */
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.*;
 
 public class Task2 extends Task1 {
@@ -25,44 +30,25 @@ public class Task2 extends Task1 {
 	/*
 	 * The blocking queue of results, used instead of arraylist in Task1
 	 */
-	private BlockingQueue<String> resultsBlockingQueue = new LinkedBlockingQueue<String>();
+	private BlockingQueue<String> resultsBlockingQueue = new LinkedBlockingQueue<>();
 	/*
 	 * Flag to show if we have finished to output the results
 	 */
 	private boolean finished = false;
 
-	/*
-	 * Local thread uncaught exceptions handler
-	 */
-	static class LocalUncaughtExceptionHandler implements
-			Thread.UncaughtExceptionHandler {
-		/*
-		 * Specifies the reaction to the given uncaught exception in the given
-		 * thread
-		 * 
-		 * @param t the given thread
-		 * 
-		 * @param e the given exception
-		 */
-		public void uncaughtException(Thread t, Throwable e) {
-			System.err.println(EXCEPTION + e.getMessage() + THROWN_IN_THREAD
-					+ t + "\n");
-			e.printStackTrace();
-		}
+	private Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher) {
+		super(checkedArgs.getFirst().getFirst(), checkedArgs.getFirst().getSecond(), checkedArgs.getSecond());
+		Thread.setDefaultUncaughtExceptionHandler(new LocalUncaughtExceptionHandler());
+		execSearcher.execute(this::search);
 	}
 
 
-    Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher) {
-        super(checkedArgs.getFirst().getFirst(), checkedArgs.getFirst().getSecond(), checkedArgs.getSecond());
-        Thread.setDefaultUncaughtExceptionHandler(new LocalUncaughtExceptionHandler());
-        execSearcher.execute(() -> search());
-    }
 	/*
 	 * The Task2's constructor, see the {@link Task1#Task1(String,String,int)
 	 * Task1#Task1(String,String,int)} also sets the uncaught exception handler
 	 * for all the threads and executors run in this class and its descendants
 	 */
-	Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher, ExecutorService execPrinter) {
+	private Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher, ExecutorService execPrinter) {
 		this(checkedArgs, execSearcher);
         execPrinter.execute(() -> outputResults(null, null));
 	}
@@ -72,6 +58,23 @@ public class Task2 extends Task1 {
         execSearcher.execute(() -> outputResults(id, pw));
     }
 
+	/*
+	 * Main method, checks the arguments using the {@link
+	 * Task1#argsCheck(String[],int) Task1#argsCheck(String[],int)}, creates the
+	 * class's instance and runs the two executors: one searching for the
+	 * results, another printing them.
+	 */
+	public static void main(String[] args) {
+		Pair<Pair<String, String>, Integer> checkedArgs = argsCheck(args, 2);
+
+		ExecutorService execSearcher = Executors.newSingleThreadExecutor();
+		ExecutorService execPrinter = Executors.newSingleThreadExecutor();
+
+		new Task2(checkedArgs, execSearcher, execPrinter);
+
+		execSearcher.shutdown();
+		execPrinter.shutdown();
+	}
 
 	/*
 	 * The search method, used by the {@link #run() run()} method. Overrides the
@@ -99,7 +102,7 @@ public class Task2 extends Task1 {
 	 * instead of the arraylist and the flag signalling that there will be no
 	 * new results, see the {@link #stopPrinter() stopPrinter()} method
 	 */
-	void outputResults(Integer id, PrintWriter pw) {
+	private void outputResults(Integer id, PrintWriter pw) {
 		boolean empty = true;
 
 		try {
@@ -164,7 +167,7 @@ public class Task2 extends Task1 {
 	 * 
 	 * @throws java.lang.InterruptedException
 	 */
-	void stopPrinter() throws InterruptedException {
+	private void stopPrinter() throws InterruptedException {
 		resultsBlockingQueue.put(END_FLAG);
 	}
 
@@ -187,20 +190,22 @@ public class Task2 extends Task1 {
 	}
 
 	/*
-	 * Main method, checks the arguments using the {@link
-	 * Task1#argsCheck(String[],int) Task1#argsCheck(String[],int)}, creates the
-	 * class's instance and runs the two executors: one searching for the
-	 * results, another printing them.
+	 * Local thread uncaught exceptions handler
 	 */
-	public static void main(String[] args) {
-        Pair<Pair<String, String>, Integer> checkedArgs = argsCheck(args, 2);
-
-		ExecutorService execSearcher = Executors.newSingleThreadExecutor();
-		ExecutorService execPrinter = Executors.newSingleThreadExecutor();
-
-		new Task2(checkedArgs, execSearcher, execPrinter);
-
-		execSearcher.shutdown();
-		execPrinter.shutdown();
+	private static class LocalUncaughtExceptionHandler implements
+			Thread.UncaughtExceptionHandler {
+		/*
+		 * Specifies the reaction to the given uncaught exception in the given
+		 * thread
+		 *
+		 * @param t the given thread
+		 *
+		 * @param e the given exception
+		 */
+		public void uncaughtException(Thread t, Throwable e) {
+			System.err.println(EXCEPTION + e.getMessage() + THROWN_IN_THREAD
+					+ t + "\n");
+			e.printStackTrace();
+		}
 	}
 }
