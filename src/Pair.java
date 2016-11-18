@@ -1,11 +1,7 @@
-
 /*
  * Copyright Alex Chulkin (c) 2016
  */
 
-/*
- * The helper Pair class
- */
 class Pair<F, S> {
 	private F first;
 	private S second;

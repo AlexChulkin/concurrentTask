@@ -1,13 +1,5 @@
-
 /*
  * Copyright Alex Chulkin (c) 2016
- */
-
-/**
- * Second task.
- * Uses two threads: one for the search, another for the printing of the results
- * @author Alex Chulkin
- * 
  */
 
 import java.io.IOException;
@@ -15,25 +7,7 @@ import java.io.PrintWriter;
 import java.util.concurrent.*;
 
 public class Task2 extends Task1 {
-	/*
-	 * The group of string constants
-	 */
-	static final String APPLICATION_IS_DEADLOCKED = "New sockets are not connecting for a long time "
-			+ "or the application is deadlocked";
-	static final Long MAXIMAL_WAIT = 150L;
-	static final String INTERRUPTED_IN_BLOCKING_QUEUE = "Interrupted in blocking queue";
-	private static final String END_FLAG = "";
-	private static final String EXCEPTION = "Exception ";
-	private static final String THROWN_IN_THREAD = " thrown in thread ";
-	private static final String CLIENT_SOCKET_OUTPUT = "Client socket #%d prints: %s\n";
-
-	/*
-	 * The blocking queue of results, used instead of arraylist in Task1
-	 */
 	private BlockingQueue<String> resultsBlockingQueue = new LinkedBlockingQueue<>();
-	/*
-	 * Flag to show if we have finished to output the results
-	 */
 	private boolean finished = false;
 
 	private Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher) {
@@ -42,15 +16,12 @@ public class Task2 extends Task1 {
 		execSearcher.execute(this::search);
 	}
 
-
-	/*
-	 * The Task2's constructor, see the {@link Task1#Task1(String,String,int)
-	 * Task1#Task1(String,String,int)} also sets the uncaught exception handler
-	 * for all the threads and executors run in this class and its descendants
-	 */
-	private Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher, ExecutorService execPrinter) {
+	private Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher,
+				  ExecutorService execPrinter) {
 		this(checkedArgs, execSearcher);
         execPrinter.execute(() -> outputResults(null, null));
+		execSearcher.shutdown();
+		execPrinter.shutdown();
 	}
 
     Task2(Pair<Pair<String, String>, Integer> checkedArgs, ExecutorService execSearcher, int id, PrintWriter pw) {
@@ -58,65 +29,38 @@ public class Task2 extends Task1 {
         execSearcher.execute(() -> outputResults(id, pw));
     }
 
-	/*
-	 * Main method, checks the arguments using the {@link
-	 * Task1#argsCheck(String[],int) Task1#argsCheck(String[],int)}, creates the
-	 * class's instance and runs the two executors: one searching for the
-	 * results, another printing them.
-	 */
 	public static void main(String[] args) {
-		Pair<Pair<String, String>, Integer> checkedArgs = argsCheck(args, 2);
-
-		ExecutorService execSearcher = Executors.newSingleThreadExecutor();
-		ExecutorService execPrinter = Executors.newSingleThreadExecutor();
-
-		new Task2(checkedArgs, execSearcher, execPrinter);
-
-		execSearcher.shutdown();
-		execPrinter.shutdown();
+		new Task2(argsCheck(args, 2), Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor());
 	}
 
-	/*
-	 * The search method, used by the {@link #run() run()} method. Overrides the
-	 * parent's search method and catches the io exception. Also calls the
-	 * {@link #stopPrinter() stopPrinter()} method.
-	 */
 	@Override
-	void search() {
+	public void search() {
 		try {
 			super.search();
 		} catch (IOException e) {
-			throw new RuntimeException(IO_ERROR, e);
+			throw new RuntimeException(Helper.IO_ERROR, e);
 		}
 		try {
 			stopPrinter();
-
 		} catch (InterruptedException e) {
-			throw new RuntimeException(INTERRUPTED_IN_BLOCKING_QUEUE, e);
+			throw new RuntimeException(Helper.INTERRUPTED_IN_BLOCKING_QUEUE, e);
 		}
 	}
 
-	/*
-	 * The overloaded version of the {@link Task1#outputResults(PrintWriter)
-	 * Task1#outputResults(PrintWriter)} method. Works with the blocking queue
-	 * instead of the arraylist and the flag signalling that there will be no
-	 * new results, see the {@link #stopPrinter() stopPrinter()} method
-	 */
 	private void outputResults(Integer id, PrintWriter pw) {
 		boolean empty = true;
-
 		try {
 			while (!Thread.interrupted()) {
-				String res = resultsBlockingQueue.poll(MAXIMAL_WAIT,
+				String res = resultsBlockingQueue.poll(Helper.MAXIMAL_WAIT,
 						TimeUnit.SECONDS);
 				if (res == null) {
-					throw new RuntimeException(APPLICATION_IS_DEADLOCKED);
+					throw new RuntimeException(Helper.APPLICATION_IS_DEADLOCKED);
 				}
 
-				if (!res.equals(END_FLAG)) {
+				if (!res.equals(Helper.END_FLAG)) {
 					if (empty) {
-						println(RESULTS, pw);
-						serverOutput(id,RESULTS);
+						println(Helper.RESULTS, pw);
+						serverOutput(id, Helper.RESULTS);
 						empty = false;
 					}
 					println(res, pw);
@@ -125,86 +69,46 @@ public class Task2 extends Task1 {
 				} else {
 
 					if (empty){
-						println(NO_RESULTS, pw);
-						serverOutput(id,NO_RESULTS);
-					}	
+						println(Helper.NO_RESULTS, pw);
+						serverOutput(id, Helper.NO_RESULTS);
+					}
 					break;
 				}
 			}
 			finished = true;
 		} catch (InterruptedException e) {
-			throw new RuntimeException(INTERRUPTED_IN_BLOCKING_QUEUE, e);
+			throw new RuntimeException(Helper.INTERRUPTED_IN_BLOCKING_QUEUE, e);
 		}
 	}
-	
+
 	private void serverOutput(Integer id,String s){
 		if(id==null)
 			return;
-		System.out.format(CLIENT_SOCKET_OUTPUT,id,s);
-		
+		System.out.format(Helper.CLIENT_SOCKET_OUTPUT, id, s);
 	}
 
-	/*
-	 * The updated version of the {@link Task1#addPathToResults(String)
-	 * Task1#addPathToResults(String)} method. Works with the blocking queue
-	 * instead of the arraylist
-	 */
 	@Override
 	void addPathToResults(String filename) {
 		try {
-
 			resultsBlockingQueue.put(filename);
-
 		} catch (InterruptedException e) {
-			throw new RuntimeException(INTERRUPTED_IN_BLOCKING_QUEUE, e);
+			throw new RuntimeException(Helper.INTERRUPTED_IN_BLOCKING_QUEUE, e);
 		}
 	}
 
-	/*
-	 * The method used by the {@link #search() search()} method. Sends the empty
-	 * string to the results blocking queue, thus signalling that there will be
-	 * no more results
-	 * 
-	 * @throws java.lang.InterruptedException
-	 */
 	private void stopPrinter() throws InterruptedException {
-		resultsBlockingQueue.put(END_FLAG);
+		resultsBlockingQueue.put(Helper.END_FLAG);
 	}
 
-	/*
-	 * Returns the finished's value
-	 * 
-	 * @return the value of finished
-	 */
 	boolean isFinished() {
 		return finished;
 	}
 
-	/*
-	 * The getter of the results blocking queue
-	 * 
-	 * @ return resultsBlockingQueue
-	 */
-	BlockingQueue<String> getResultsBlockingQueue() {
-		return resultsBlockingQueue;
-	}
-
-	/*
-	 * Local thread uncaught exceptions handler
-	 */
 	private static class LocalUncaughtExceptionHandler implements
 			Thread.UncaughtExceptionHandler {
-		/*
-		 * Specifies the reaction to the given uncaught exception in the given
-		 * thread
-		 *
-		 * @param t the given thread
-		 *
-		 * @param e the given exception
-		 */
+
 		public void uncaughtException(Thread t, Throwable e) {
-			System.err.println(EXCEPTION + e.getMessage() + THROWN_IN_THREAD
-					+ t + "\n");
+			System.err.println(Helper.EXCEPTION + e.getMessage() + Helper.THROWN_IN_THREAD + t + "\n");
 			e.printStackTrace();
 		}
 	}

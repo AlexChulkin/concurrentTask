@@ -1,3 +1,7 @@
+<!--
+  ~ Copyright Alex Chulkin (c) 2016
+  -->
+
 <project name="FileSearch" default="dist" basedir="../../..//">
     <description>
         Project Description
@@ -6,9 +10,9 @@
 
     <!-- set global properties for this build -->
     <property name="projectName" value="concurrentTask"/>
-    <property name="src" location="../../src"/>
-    <property name="build" location="../../build"/>
-    <property name="dist" location="../../dist"/>
+    <property name="src" location="E:/Java/Projects/concurrentTask/src"/>
+    <property name="build" location="E:/Java/Projects/concurrentTask/build"/>
+    <property name="dist" location="E:/Java/Projects/concurrentTask/dist"/>
     <property name="webcontent" location="WebContent"/>
 
     <path id="classpath">
