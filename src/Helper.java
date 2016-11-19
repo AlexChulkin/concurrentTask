@@ -1,3 +1,4 @@
+
 /*
  * Copyright Alex Chulkin (c) 2016
  */
@@ -78,6 +79,4 @@ class Helper {
         System.err.println(Helper.SERVER_USAGE);
         System.exit(-1);
     }
-
-
 }
