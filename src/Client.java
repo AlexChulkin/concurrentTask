@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 class Client {
+    private static Queue<ExecutorService> execs = new LinkedList<>();
     private static Queue<String> resultsQueue = new LinkedList<>();
     private final String root;
     private final String mask;
@@ -27,25 +28,35 @@ class Client {
         this.depth = checkedArgs.getSecond();
     }
 
+    static void shutdownEverything() {
+        execs.forEach(ExecutorService::shutdown);
+    }
+
     Client setBrowserExec(ExecutorService browserExec) {
         this.browserExec = browserExec;
+        execs.add(browserExec);
         return this;
     }
 
     Client setPrinterExec(ExecutorService printerExec) {
         this.printerExec = printerExec;
+        execs.add(printerExec);
         resultsQueue = new LinkedBlockingQueue<>();
         return this;
     }
 
     Client setDispatcherExec(ExecutorService dispatcherExec) {
         this.dispatcherExec = dispatcherExec;
+        execs.add(dispatcherExec);
         return this;
     }
 
     void search() {
         if (Optional.ofNullable(dispatcherExec).isPresent()) {
-            dispatcherExec.execute(this::search_);
+            dispatcherExec.execute(() -> {
+                search_();
+                stopPrinter();
+            });
         } else if (Optional.ofNullable(browserExec).isPresent()) {
             browserExec.execute(() -> {
                 search_();
@@ -60,10 +71,13 @@ class Client {
         try {
             search__();
         } catch (IOException e) {
+            shutdownEverything();
             throw new RuntimeException(Helper.IO_ERROR, e);
         } catch (InterruptedException e) {
+            shutdownEverything();
             throw new RuntimeException(Helper.INTERRUPTED_IN_EXECUTOR, e);
         } catch (ExecutionException e) {
+            shutdownEverything();
             throw new RuntimeException(Helper.EXECUTION_EXCEPTION, e);
         }
     }
@@ -95,7 +109,7 @@ class Client {
 
     private Deque<Path> getPathChildren(Path parent, Path child, boolean neededDepth, String mask)
             throws IOException, InterruptedException, ExecutionException {
-        if (Optional.ofNullable(browserExec).isPresent()) {
+        if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
             return browserExec.submit(() -> getPathChildren_(parent, child, neededDepth, mask)).get();
         }
         return getPathChildren_(parent, child, neededDepth, mask);
@@ -138,10 +152,8 @@ class Client {
     }
 
     private void addPathToResults(String filename) {
-        if (Optional.ofNullable(dispatcherExec).isPresent()) {
+        if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
             dispatcherExec.execute(() -> addPathToResults_(filename));
-        } else if (Optional.ofNullable(browserExec).isPresent()) {
-            browserExec.execute(() -> addPathToResults_(filename));
         } else {
             addPathToResults_(filename);
         }
@@ -227,7 +239,7 @@ class Client {
     }
 
     private Path getParentPath(Path path) throws IOException, InterruptedException, ExecutionException {
-        if (Optional.ofNullable(browserExec).isPresent()) {
+        if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
             return browserExec.submit(() -> getParentPath_(path)).get();
         }
         return getParentPath_(path);
@@ -241,7 +253,7 @@ class Client {
         if (Optional.ofNullable(rootPath).isPresent()) {
             return rootPath;
         }
-        if (Optional.ofNullable(browserExec).isPresent()) {
+        if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
             return browserExec.submit(() -> getRootPath_(root)).get();
         }
         return getRootPath_(root);

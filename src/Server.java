@@ -6,15 +6,18 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 
-public class Server implements Runnable {
+class Server implements Runnable {
+    private static Queue<ExecutorService> serverExecs = new LinkedList<>();
     private int port;
     private String root;
     private ServerSocket serverSocket;
     private boolean isStopped = false;
-    private ExecutorService browserExec;
     private ExecutorService serverExec;
+    private ExecutorService browserExec;
     private ExecutorService printerExec;
     private ExecutorService dispatcherExec;
 
@@ -22,6 +25,11 @@ public class Server implements Runnable {
         this.root = checkedArgs.getFirst();
         this.port = checkedArgs.getSecond();
         this.serverExec = serverExec;
+        serverExecs.add(serverExec);
+    }
+
+    static void shutdownEverything() {
+        serverExecs.forEach(ExecutorService::shutdown);
     }
 
     Server setBrowserExec(ExecutorService browserExec) {
