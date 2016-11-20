@@ -40,23 +40,23 @@ class Helper {
             + " depth should be not-negative integer";
     private static final String SERVER_USAGE = "<rootPath> <portNumber>,\nrootPath should be a valid path";
 
-    static Pair<Pair<String, String>, Integer> argsCheck(String[] args, int taskNum) {
+    static Pair<Pair<String, String>, Integer> clientArgsCheck(String[] args, int taskNum) {
         if ((args.length != 3) || (!new File(args[0]).exists())) {
-            usage(taskNum);
+            clientUsage(taskNum);
         }
         int depth = -1;
         try {
             depth = Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {
-            usage(taskNum);
+            clientUsage(taskNum);
         }
         if (depth < 0)
-            usage(taskNum);
+            clientUsage(taskNum);
         Pair<String, String> pair = new Pair<>(args[0], args[1]);
         return new Pair<>(pair, depth);
     }
 
-    private static void usage(int taskNum) {
+    private static void clientUsage(int taskNum) {
         System.err.println(Helper.CLIENT_USAGE_BEG + taskNum + " " + Helper.CLIENT_USAGE_END);
         System.exit(-1);
     }

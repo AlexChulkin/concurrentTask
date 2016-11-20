@@ -28,7 +28,7 @@ class Server implements Runnable {
         serverExecs.add(serverExec);
     }
 
-    static void shutdownEverything() {
+    private static void shutdownEverything() {
         serverExecs.forEach(ExecutorService::shutdown);
     }
 
@@ -87,12 +87,11 @@ class Server implements Runnable {
         this.isStopped = true;
         try {
             this.serverSocket.close();
-            browserExec.shutdown();
-            dispatcherExec.shutdown();
-            serverExec.shutdown();
-            printerExec.shutdown();
         } catch (IOException e) {
             throw new RuntimeException(Helper.CLOSING_SERVER_ERROR, e);
+        } finally {
+            shutdownEverything();
+            Client.shutdownEverything();
         }
     }
 

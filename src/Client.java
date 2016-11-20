@@ -71,13 +71,10 @@ class Client {
         try {
             search__();
         } catch (IOException e) {
-            shutdownEverything();
             throw new RuntimeException(Helper.IO_ERROR, e);
         } catch (InterruptedException e) {
-            shutdownEverything();
             throw new RuntimeException(Helper.INTERRUPTED_IN_EXECUTOR, e);
         } catch (ExecutionException e) {
-            shutdownEverything();
             throw new RuntimeException(Helper.EXECUTION_EXCEPTION, e);
         }
     }
