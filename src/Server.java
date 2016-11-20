@@ -101,7 +101,7 @@ class Server implements Runnable {
              BufferedReader br = new BufferedReader(new InputStreamReader(in, Helper.ENCODING));
              PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, Helper.ENCODING))) {
 
-            Client client = new Client(parseLine(br, pw));
+            Client client = new Client(Helper.telnetClientCheckArgs(root, br, pw));
             client.setPrinterExec(printerExec);
             client.setBrowserExec(browserExec);
             client.setDispatcherExec(dispatcherExec);
@@ -119,39 +119,6 @@ class Server implements Runnable {
             closeSocket(clientSocket);
             throw new RuntimeException(Helper.IO_ERROR, e);
         }
-    }
-
-    private Pair<Pair<String, String>, Integer> parseLine(BufferedReader br, PrintWriter pw) throws IOException {
-        int depth;
-        String mask;
-        while (true) {
-            String line = br.readLine().trim();
-            int ixSpace = line.indexOf(' ');
-            if (ixSpace == -1) {
-                clientUsage(pw, true);
-                continue;
-            }
-            mask = line.substring(ixSpace + 1).trim();
-            try {
-                depth = Integer.parseInt(line.substring(0, ixSpace));
-            } catch (NumberFormatException e) {
-                clientUsage(pw, true);
-                continue;
-            }
-            if (depth < 0) {
-                clientUsage(pw, true);
-                continue;
-            }
-            break;
-        }
-        return new Pair<>(new Pair<>(root, mask), depth);
-    }
-
-    private void clientUsage(PrintWriter pw, boolean error) {
-        if (error) {
-            pw.println(Helper.CLIENT_ERROR);
-        }
-        pw.println(Helper.CLIENT_USAGE);
     }
 
     private void closeSocket(Socket socket) {
