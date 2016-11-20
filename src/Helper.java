@@ -7,6 +7,7 @@ import java.io.File;
 
 class Helper {
     static final String NO_RESULTS = "NO_RESULTS";
+    static final String END_OF_OUTPUT = "END OF OUTPUT";
     static final String RESULTS = "RESULTS";
     static final String IO_ERROR = "I/O Error occured";
     static final String APPLICATION_IS_DEADLOCKED = "New sockets are not connecting for a long time "
@@ -33,11 +34,11 @@ class Helper {
     static final String SERVER_STOPPING = "Server stopping...";
     static final String SERVER_STOPPED = "Server stopped!";
     static final String SOCKET_CONNECTED = "The client socket #%d has connected to the server!\n";
-    private static final String USAGE_BEG = "Input error, the pattern is the following: java Task";
-    private static final String USAGE_END = " <rootPath>"
+    private static final String CLIENT_USAGE_BEG = "Input error, the pattern is the following: java Task";
+    private static final String CLIENT_USAGE_END = " <rootPath>"
             + "  <mask>\n <depth>, rootPath should be a valid path,"
             + " depth should be not-negative integer";
-    private static final String SERVER_USAGE = "java Task3 <rootPath> <portNumber>,\nrootPath should be a valid path";
+    private static final String SERVER_USAGE = "<rootPath> <portNumber>,\nrootPath should be a valid path";
 
     static Pair<Pair<String, String>, Integer> argsCheck(String[] args, int taskNum) {
         if ((args.length != 3) || (!new File(args[0]).exists())) {
@@ -56,7 +57,7 @@ class Helper {
     }
 
     private static void usage(int taskNum) {
-        System.err.println(Helper.USAGE_BEG + taskNum + " " + Helper.USAGE_END);
+        System.err.println(Helper.CLIENT_USAGE_BEG + taskNum + " " + Helper.CLIENT_USAGE_END);
         System.exit(-1);
     }
 

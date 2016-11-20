@@ -135,18 +135,21 @@ class Client {
             return pathsList;
         }
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(parent)) {
-            for (Path entry : stream)
-                if (entry.toFile().exists()) {
-                    if (neededDepth && entry.getFileName().toString().contains(mask)) {
-                        addPathToResults(entry.toRealPath().toString());
-                    }
-                    if (!Optional.ofNullable(child).isPresent() || !child.equals(entry)) {
-                        pathsList.add(entry);
+        if (Files.isReadable(parent)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(parent)) {
+                for (Path entry : stream) {
+                    if (entry.toFile().exists()) {
+                        if (neededDepth && entry.getFileName().toString().contains(mask)) {
+                            addPathToResults(entry.toRealPath().toString());
+                        }
+                        if (!Optional.ofNullable(child).isPresent() || !child.equals(entry)) {
+                            pathsList.add(entry);
+                        }
                     }
                 }
-        } catch (DirectoryIteratorException ex) {
-            throw ex.getCause();
+            } catch (DirectoryIteratorException ex) {
+                throw ex.getCause();
+            }
         }
         return pathsList;
     }
@@ -167,26 +170,26 @@ class Client {
         return finished;
     }
 
-    void outputResults(PrintWriter pw, Integer id) {
+    void output(PrintWriter pw, Integer id) {
         if (Optional.ofNullable(printerExec).isPresent()) {
             if (Optional.ofNullable(dispatcherExec).isPresent()) {
-                printerExec.execute(() -> outputResults_(pw, id));
+                printerExec.execute(() -> output_(pw, id));
             } else {
-                printerExec.execute(() -> outputResults_(null, null));
+                printerExec.execute(() -> output_(null, null));
             }
         } else {
-            outputResults_(pw);
+            output_(pw);
         }
     }
 
-    private void outputResults_(PrintWriter pw) {
-        println(resultsQueue.isEmpty() ? Helper.NO_RESULTS : Helper.RESULTS, pw);
+    private void output_(PrintWriter pw) {
+        clientPrintln(resultsQueue.isEmpty() ? Helper.NO_RESULTS : Helper.RESULTS, pw);
         for (String s : resultsQueue) {
-            println(s, pw);
+            clientPrintln(s, pw);
         }
     }
 
-    private void outputResults_(PrintWriter pw, Integer id) {
+    private void output_(PrintWriter pw, Integer id) {
         boolean empty = true;
         try {
             while (!Thread.interrupted()) {
@@ -197,19 +200,15 @@ class Client {
 
                 if (!res.equals(Helper.END_FLAG)) {
                     if (empty) {
-                        println(Helper.RESULTS, pw);
-                        serverOutput(id, Helper.RESULTS);
+                        clientPrintln(Helper.RESULTS, pw);
+                        serverPrintln(id, Helper.RESULTS);
                         empty = false;
                     }
-                    println(res, pw);
-                    serverOutput(id, res);
-
+                    clientPrintln(res, pw);
+                    serverPrintln(id, res);
                 } else {
-
-                    if (empty) {
-                        println(Helper.NO_RESULTS, pw);
-                        serverOutput(id, Helper.NO_RESULTS);
-                    }
+                    clientPrintln(empty ? Helper.NO_RESULTS : Helper.END_OF_OUTPUT, pw);
+                    serverPrintln(id, empty ? Helper.NO_RESULTS : Helper.END_OF_OUTPUT);
                     break;
                 }
             }
@@ -219,7 +218,7 @@ class Client {
         }
     }
 
-    private void serverOutput(Integer id, String s) {
+    private void serverPrintln(Integer id, String s) {
         if (!Optional.ofNullable(id).isPresent()) {
             return;
         }
@@ -230,7 +229,7 @@ class Client {
         resultsQueue.add(Helper.END_FLAG);
     }
 
-    private void println(String s, PrintWriter pw) {
+    private void clientPrintln(String s, PrintWriter pw) {
         if (!Optional.ofNullable(pw).isPresent()) {
             System.out.println(s);
         } else {

@@ -5,7 +5,7 @@
 
 import java.util.concurrent.Executors;
 
-public class Task3 extends Task {
+public class Task3 extends ProtoTask {
 	public static void main(String[] args) {
 		Server server = new Server(Helper.serverArgsCheck(args), Executors.newSingleThreadExecutor());
 		server.setDispatcherExec(Executors.newCachedThreadPool()).setBrowserExec(Executors.newSingleThreadExecutor());

@@ -3,7 +3,7 @@
  * Copyright Alex Chulkin (c) 2016
  */
 
-class Task {
+class ProtoTask {
     static {
         Thread.setDefaultUncaughtExceptionHandler(new LocalUncaughtExceptionHandler());
     }

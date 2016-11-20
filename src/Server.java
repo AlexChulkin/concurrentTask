@@ -65,6 +65,7 @@ class Server implements Runnable {
                 }
                 throw new RuntimeException(Helper.CLIENT_CONNECTION_ERROR, e);
             }
+            System.out.println();
             System.out.format(Helper.SOCKET_CONNECTED, clientSocketCounter);
             final int id = clientSocketCounter++;
             dispatcherExec.execute(() -> prepareAndRunSearch(id, clientSocket));
@@ -101,13 +102,13 @@ class Server implements Runnable {
              BufferedReader br = new BufferedReader(new InputStreamReader(in, Helper.ENCODING));
              PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, Helper.ENCODING))) {
 
-            Client task = new Client(parseLine(br, pw));
-            task.setPrinterExec(printerExec);
-            task.setBrowserExec(browserExec);
-            task.setDispatcherExec(dispatcherExec);
-            task.search();
-            task.outputResults(pw, id);
-            while (!task.isFinished()) {
+            Client client = new Client(parseLine(br, pw));
+            client.setPrinterExec(printerExec);
+            client.setBrowserExec(browserExec);
+            client.setDispatcherExec(dispatcherExec);
+            client.search();
+            client.output(pw, id);
+            while (!client.isFinished()) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
