@@ -14,7 +14,6 @@ public class Task2 extends ProtoTask {
 		client.setBrowserExec(browserExec).setPrinterExec(printerExec);
 		client.search();
 		client.output(null, null);
-		browserExec.shutdown();
-		printerExec.shutdown();
+		Client.shutdownEverything();
 	}
 }
