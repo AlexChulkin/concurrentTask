@@ -103,12 +103,12 @@ class Client {
     private Deque<Path> getPathChildren(Path parent, Path child, boolean neededDepth, String mask)
             throws IOException, InterruptedException, ExecutionException {
         if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
-            return browserExec.submit(() -> getPathChildren_(parent, child, neededDepth, mask)).get();
+            return browserExec.submit(() -> getPathChildrenInsideExec(parent, child, neededDepth, mask)).get();
         }
-        return getPathChildren_(parent, child, neededDepth, mask);
+        return getPathChildrenInsideExec(parent, child, neededDepth, mask);
     }
 
-    private Deque<Path> getPathChildren_(Path parent, Path child, boolean neededDepth, String mask) throws IOException {
+    private Deque<Path> getPathChildrenInsideExec(Path parent, Path child, boolean neededDepth, String mask) throws IOException {
         Deque<Path> pathsList = new LinkedList<>();
         if (Optional.ofNullable(parent).isPresent() && !parent.toFile().isDirectory())
             return pathsList;
@@ -149,13 +149,13 @@ class Client {
 
     private void addPathToResults(String filename) {
         if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
-            dispatcherExec.execute(() -> addPathToResults_(filename));
+            dispatcherExec.execute(() -> addPathToResultsInsideExec(filename));
         } else {
-            addPathToResults_(filename);
+            addPathToResultsInsideExec(filename);
         }
     }
 
-    private void addPathToResults_(String filename) {
+    private void addPathToResultsInsideExec(String filename) {
         resultsQueue.add(filename);
     }
 
