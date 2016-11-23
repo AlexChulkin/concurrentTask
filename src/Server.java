@@ -106,7 +106,7 @@ class Server implements Runnable {
             client.setBrowserExec(browserExec);
             client.setDispatcherExec(dispatcherExec);
             client.search();
-            client.output(pw, id);
+            client.outputResults(pw, id);
             while (!client.isFinished()) {
                 try {
                     Thread.sleep(100);

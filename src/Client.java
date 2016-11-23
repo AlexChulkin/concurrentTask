@@ -54,53 +54,49 @@ class Client {
     void search() {
         if (Optional.ofNullable(dispatcherExec).isPresent()) {
             dispatcherExec.execute(() -> {
-                search_();
+                searchInsideExec();
                 stopPrinter();
             });
         } else if (Optional.ofNullable(browserExec).isPresent()) {
             browserExec.execute(() -> {
-                search_();
+                searchInsideExec();
                 stopPrinter();
             });
         } else {
-            search_();
+            searchInsideExec();
         }
     }
 
-    private void search_() {
+    private void searchInsideExec() {
         try {
-            search__();
+            Path currentPath;
+            Path rootPath = getRootPath(root);
+            Pair<Deque<Path>, Integer> currentSiblingPathsAndDepth;
+            int currentDepth = 0;
+            Stack<Pair<Deque<Path>, Integer>> stack = new Stack<>();
+            stack.push(new Pair<>(getPathChildren(getParentPath(rootPath), rootPath, depth == currentDepth, mask),
+                    currentDepth));
+            while (!stack.isEmpty()) {
+                currentSiblingPathsAndDepth = stack.pop();
+                Deque<Path> currentSiblingPaths = currentSiblingPathsAndDepth.getFirst();
+                currentDepth = currentSiblingPathsAndDepth.getSecond();
+                while (!currentSiblingPaths.isEmpty()) {
+                    currentPath = currentSiblingPaths.removeFirst();
+                    if (!currentSiblingPaths.isEmpty())
+                        stack.push(new Pair<>(currentSiblingPaths, currentDepth));
+                    if (currentDepth < depth) {
+                        currentSiblingPaths = getPathChildren(currentPath, null, depth == ++currentDepth, mask);
+                    } else {
+                        break;
+                    }
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException(Helper.IO_ERROR, e);
         } catch (InterruptedException e) {
             throw new RuntimeException(Helper.INTERRUPTED_IN_EXECUTOR, e);
         } catch (ExecutionException e) {
             throw new RuntimeException(Helper.EXECUTION_EXCEPTION, e);
-        }
-    }
-
-    private void search__() throws IOException, InterruptedException, ExecutionException {
-        Path currentPath;
-        Path rootPath = getRootPath(root);
-        Pair<Deque<Path>, Integer> currentSiblingPathsAndDepth;
-        int currentDepth = 0;
-        Stack<Pair<Deque<Path>, Integer>> stack = new Stack<>();
-        stack.push(new Pair<>(getPathChildren(getParentPath(rootPath), rootPath, depth == currentDepth, mask),
-                currentDepth));
-        while (!stack.isEmpty()) {
-            currentSiblingPathsAndDepth = stack.pop();
-            Deque<Path> currentSiblingPaths = currentSiblingPathsAndDepth.getFirst();
-            currentDepth = currentSiblingPathsAndDepth.getSecond();
-            while (!currentSiblingPaths.isEmpty()) {
-                currentPath = currentSiblingPaths.removeFirst();
-                if (!currentSiblingPaths.isEmpty())
-                    stack.push(new Pair<>(currentSiblingPaths, currentDepth));
-                if (currentDepth < depth) {
-                    currentSiblingPaths = getPathChildren(currentPath, null, depth == ++currentDepth, mask);
-                } else {
-                    break;
-                }
-            }
         }
     }
 
@@ -167,26 +163,22 @@ class Client {
         return finished;
     }
 
-    void output(PrintWriter pw, Integer id) {
+    void outputResults(PrintWriter pw, Integer id) {
         if (Optional.ofNullable(printerExec).isPresent()) {
             if (Optional.ofNullable(dispatcherExec).isPresent()) {
-                printerExec.execute(() -> output_(pw, id));
+                printerExec.execute(() -> outputResultsInsideExec(pw, id));
             } else {
-                printerExec.execute(() -> output_(null, null));
+                printerExec.execute(() -> outputResultsInsideExec(null, null));
             }
         } else {
-            output_(pw);
+            clientPrintln(resultsQueue.isEmpty() ? Helper.NO_RESULTS : Helper.RESULTS, pw);
+            for (String s : resultsQueue) {
+                clientPrintln(s, pw);
+            }
         }
     }
 
-    private void output_(PrintWriter pw) {
-        clientPrintln(resultsQueue.isEmpty() ? Helper.NO_RESULTS : Helper.RESULTS, pw);
-        for (String s : resultsQueue) {
-            clientPrintln(s, pw);
-        }
-    }
-
-    private void output_(PrintWriter pw, Integer id) {
+    private void outputResultsInsideExec(PrintWriter pw, Integer id) {
         boolean empty = true;
         try {
             while (!Thread.interrupted()) {
@@ -194,7 +186,6 @@ class Client {
                 if (!Optional.ofNullable(res).isPresent()) {
                     throw new RuntimeException(Helper.APPLICATION_IS_DEADLOCKED);
                 }
-
                 if (!res.equals(Helper.END_FLAG)) {
                     if (empty) {
                         clientPrintln(Helper.RESULTS, pw);
@@ -236,12 +227,12 @@ class Client {
 
     private Path getParentPath(Path path) throws IOException, InterruptedException, ExecutionException {
         if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
-            return browserExec.submit(() -> getParentPath_(path)).get();
+            return browserExec.submit(() -> getParentPathInsideExec(path)).get();
         }
-        return getParentPath_(path);
+        return getParentPathInsideExec(path);
     }
 
-    private Path getParentPath_(Path path) throws IOException {
+    private Path getParentPathInsideExec(Path path) throws IOException {
         return path.toRealPath().getParent();
     }
 
@@ -250,12 +241,12 @@ class Client {
             return rootPath;
         }
         if (Optional.ofNullable(dispatcherExec).isPresent() && Optional.ofNullable(browserExec).isPresent()) {
-            return browserExec.submit(() -> getRootPath_(root)).get();
+            return browserExec.submit(() -> getRootPathInsideExec(root)).get();
         }
-        return getRootPath_(root);
+        return getRootPathInsideExec(root);
     }
 
-    private Path getRootPath_(String root) throws IOException {
+    private Path getRootPathInsideExec(String root) throws IOException {
         rootPath = Paths.get(root).toRealPath();
         return rootPath;
     }

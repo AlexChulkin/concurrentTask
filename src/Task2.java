@@ -13,7 +13,7 @@ public class Task2 extends ProtoTask {
 		ExecutorService printerExec = Executors.newSingleThreadExecutor();
 		client.setBrowserExec(browserExec).setPrinterExec(printerExec);
 		client.search();
-		client.output(null, null);
+		client.outputResults(null, null);
 		Client.shutdownEverything();
 	}
 }

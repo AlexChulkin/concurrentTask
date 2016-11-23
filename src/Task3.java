@@ -11,11 +11,7 @@ public class Task3 extends ProtoTask {
 		server.setDispatcherExec(Executors.newCachedThreadPool()).setBrowserExec(Executors.newSingleThreadExecutor());
 		server.setPrinterExec(Executors.newCachedThreadPool());
 		server.execute();
-		try {
-			Thread.sleep(Helper.MAXIMAL_WAIT);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(Helper.INTERRUPTED_DURING_SLEEP, e);
-		}
+		Helper.tryToSleep(Helper.MAXIMAL_WAIT);
 		System.out.println(Helper.SERVER_STOPPING);
 		server.stop();
 	}
