@@ -3,6 +3,8 @@
  * Copyright Alex Chulkin (c) 2016
  */
 
+package com.chulkin;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 

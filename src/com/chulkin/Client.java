@@ -3,6 +3,8 @@
  * Copyright Alex Chulkin (c) 2016
  */
 
+package com.chulkin;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;

@@ -1,7 +1,8 @@
-
 /*
  * Copyright Alex Chulkin (c) 2016
  */
+
+package com.chulkin;
 
 import java.io.*;
 import java.net.ServerSocket;
