@@ -3,8 +3,6 @@
  * Copyright Alex Chulkin (c) 2016
  */
 
-package com.chulkin;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +18,7 @@ class Helper {
     static final String IO_ERROR = "I/O Error occured";
     static final String APPLICATION_IS_DEADLOCKED = "New sockets are not connecting for a long time "
             + "or the application is deadlocked";
-    static final long MAXIMAL_WAIT = 600000L;
+    static final long MAXIMAL_WAIT = 600_000L;
     static final String INTERRUPTED_IN_BLOCKING_QUEUE = "Interrupted in blocking queue";
     static final String INTERRUPTED_IN_EXECUTOR = "Interrupted in executor";
     static final String EXECUTION_EXCEPTION = "Exeption occurred during execution";

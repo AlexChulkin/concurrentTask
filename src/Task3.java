@@ -3,8 +3,6 @@
  * Copyright Alex Chulkin (c) 2016
  */
 
-package com.chulkin;
-
 import java.util.concurrent.Executors;
 
 public class Task3 extends ProtoTask {

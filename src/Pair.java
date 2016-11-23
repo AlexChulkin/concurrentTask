@@ -3,8 +3,6 @@
  * Copyright Alex Chulkin (c) 2016
  */
 
-package com.chulkin;
-
 class Pair<F, S> {
 	private F first;
 	private S second;
